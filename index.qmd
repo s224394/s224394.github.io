@@ -138,6 +138,10 @@ focuscrimes = {
     'DRUG/NARCOTIC', 'LARCENY/THEFT', 'VANDALISM', 'VEHICLE THEFT', 'STOLEN PROPERTY'
 }
 
+
+# Load data
+df = pd.read_csv("C:/NoterDTU/6_semester/Social_data/website_2/s224394.github.io/merged_data.csv")
+
 # Filter and process data
 df_focus = df[df['Category'].isin(focuscrimes)]
 df_focus_grouped = df_focus.groupby(['Year', 'Month', 'Category']).size().reset_index(name='Crime_Count')
