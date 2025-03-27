@@ -1,0 +1,290 @@
+---
+title: Looking at Vehicle thefts from 2003-2024 in 
+from: markdown+emoji
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+## The data
+Since the year 2003 the police department of san francisco has been reporting crime data. Of particular intererest for analysis is the different crime types, the time of incident (both date but also time of day down to the minute) but also the coordinates of the incident (given in latitude/longitude). From this data its possible to look at temporal and spatial trends of different crimes over the last 20+ years. The different categoris of crimes include Vehicle theft, vandalism, robbery, prostiution and many more. 
+I have choosen to look at the trends of vehicle thefts since the trend in many ways are unique compared to the other types of crimes, but i will go more into detail later. 
+
+## The temporal trend of vehicle thefts
+The first super relevant thing is to look at how the number of incidents of vehicle theft have evolved over time.
+
+```{python}
+import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt
+data=pd.read_csv("C:/NoterDTU/6_semester/Social_data/website_2/merged_data.csv")
+crimes = data[['Category', 'Year']]
+crimes = crimes[(crimes['Category']=='VEHICLE THEFT') & (crimes['Year']!=2025)  ]
+crime_counts = crimes["Year"].value_counts().sort_index()
+crime_counts.plot(kind="bar",color="indigo",edgecolor="black")
+plt.ylabel("Number of incidents")
+plt.xlabel("Year")
+plt.title("Number of Vehicle thefts per year (2003-2024)")
+plt.show()
+```
+
+One thing one notices almost immedialty is the sudden drop from 2005 to 2006 and onwards. In 2005 the numbers peak at around 17.500 vehicle thefts while the next years it drops by around 10.000 and remains in that range going forward. This approximately 60% of the crimes that just stopped happening in one year. That seems quite strange. Some sources suggest that the fact that cars are hard to break into and harder to dissamble might be :grinning:
+
+We will later compare vehicle theft to some other crimes in order to see if this was the overall trend of crime data (spoilers its not)
+
+## The spatial trends 
+
+One thing one might suspect could explain the sudden drop is if there suddenly where a focus from the police deparment on a specific area. As previously mentioned they have the data for where the different crimes are happening and one would then think that they then priotize forces in these specific areas. In order to look at the we plot a time series of where the incidents of vehecle theft is happening for a given month and try to see if there is any difference.
+
+```{python}
+import folium
+from folium.plugins import HeatMapWithTime
+from IPython.display import display
+
+# Load data
+df = pd.read_csv("C:/NoterDTU/6_semester/Social_data/website_2/merged_data.csv")
+
+# Filter for vehicle thefts between 2003-2007
+df_filtered = df[(df['Category'] == 'VEHICLE THEFT') & 
+                 (df['Year'].between(2003, 2024))].copy()
+
+# Extract relevant columns and drop NA
+df_filtered = df_filtered[['Latitude', 'Longitude', 'Month', 'Year']].dropna()
+
+# Check for valid coordinates
+valid_coords = df_filtered[
+    (df_filtered['Latitude'].between(-90, 90)) & 
+    (df_filtered['Longitude'].between(-180, 180))
+]
+
+# Define month mapping and order
+month_mapping = {
+    "January": 1, "February": 2, "March": 3, "April": 4, 
+    "May": 5, "June": 6, "July": 7, "August": 8, 
+    "September": 9, "October": 10, "November": 11, "December": 12
+}
+month_names = list(month_mapping.keys())
+
+# Create numerical month column
+df_filtered['MonthNum'] = df_filtered['Month'].map(month_mapping)
+
+# Sort by year and month
+df_filtered = df_filtered.sort_values(['Year', 'MonthNum'])
+
+# Prepare heat data and time index
+heat_data = []
+time_index = []
+
+for year in range(2003, 2025):
+    for month_num in range(1, 13):
+        month_data = df_filtered[
+            (df_filtered['Year'] == year) & 
+            (df_filtered['MonthNum'] == month_num)
+        ]
+        coords = month_data[['Latitude', 'Longitude']].values.tolist()
+        heat_data.append(coords)
+        time_index.append(f"{month_names[month_num-1]} {year}")
+        
+
+# Only create map if we have data
+
+# Create base map
+base_map = folium.Map(location=[37.75800, -122.41914], zoom_start=11.5,zoom_control=0,scrollWheelZoom=False,dragging=0)
+
+# Add heatmap with time
+HeatMapWithTime(
+    heat_data,
+    index=time_index,  # Time labels showing month and year
+    auto_play=0,
+    max_opacity=0.5,
+    radius=11,
+    min_opacity=0.1,
+    gradient={0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 0.8: 'red'},
+    display_index=True,
+    use_local_extrema=1, 
+    name="Vehicle Thefts",
+    blur=1
+).add_to(base_map)
+
+# Display map
+display(base_map)
+```
+
+From the heatmap its clear that a lot of the incidents happen in the north-eastern/eastern part of san francisco. And that trend does not change as teh years go by. But its clear that there is fewer crimes compared to 2003-2005 and the years after since the point of the heat map are more spread out. 
+
+The news article https://www.eastbaytimes.com/2007/02/16/car-thefts-decrease-statewide/ also tells this story
+Where the general trend for vehicle theft are on the decline. The reason behind this trend is both the fact that more and more vehicle have implemented alarms, key-coding systems. But also there has also been set up 16 auto-theft task forces. There have also been an increase in the use of so called "bait-cars" which are used as bait to track down the drivers and since its normal that they steal more than one car the number of cars that are being stolen drops significantly. In 2006 they made 357 arrest with the use of bait-cars. Which might have severely impacted the amount of cars stolen.
+
+After 2006 the number of incidents are generally low compared to 
+
+Last thing that could be interesting to look at is if the trends in data are unique to car theft or if the over all trend of crime is the "same" as with the car theft. 
+
+## Correlation between crimes
+
+In order to compare the crimes. We choose to look at how correlated the different crimes are. 
+What we are comparing is the amount of crimes for a given month example burglary versus vehicle theft in the month of january 2015. We can the make an scatter plot and compute how related the data are. The scatter plot might also show other trends. But we will get to that. :sunglasses:
+```{python}
+from bokeh.io import output_notebook, show
+from bokeh.layouts import column
+from bokeh.models import Select, Slope, Label, CustomJS, HoverTool
+from bokeh.plotting import figure, ColumnDataSource
+
+# Configure Bokeh to load silently
+output_notebook(hide_banner=True)
+
+# Define focus crimes
+focuscrimes = {
+    'WEAPON LAWS', 'PROSTITUTION', 'ROBBERY', 'BURGLARY', 'ASSAULT', 
+    'DRUG/NARCOTIC', 'LARCENY/THEFT', 'VANDALISM', 'VEHICLE THEFT', 'STOLEN PROPERTY'
+}
+
+# Filter and process data
+df_focus = df[df['Category'].isin(focuscrimes)]
+df_focus_grouped = df_focus.groupby(['Year', 'Month', 'Category']).size().reset_index(name='Crime_Count')
+df_focus_grouped['Date'] = pd.to_datetime(df_focus_grouped['Month'] + ' ' + df_focus_grouped['Year'].astype(str), errors='coerce')
+df_focus_grouped = df_focus_grouped.dropna()
+
+# Extract month and year for hover tool
+df_focus_grouped['Month_Year'] = df_focus_grouped['Date'].dt.strftime('%b %Y')
+
+# Pivot the data
+df_pivot = df_focus_grouped.pivot_table(index=['Date', 'Month_Year'], columns='Category', values='Crime_Count', fill_value=0)
+df_pivot['Total Crimes'] = df_pivot.sum(axis=1)
+df_pivot.reset_index(inplace=True)
+
+# Prepare plotting data
+numeric_cols = [col for col in df_pivot.columns if col not in ['Date', 'Month_Year']]
+df_plot = df_pivot[numeric_cols]
+
+# Set initial variables
+x_init = numeric_cols[8]
+y_init = numeric_cols[1]
+x_data = df_plot[x_init].values
+y_data = df_plot[y_init].values
+
+# Calculate initial regression
+n = len(x_data)
+x_sum, y_sum, xy_sum, x2_sum, y2_sum = x_data.sum(), y_data.sum(), (x_data*y_data).sum(), (x_data**2).sum(), (y_data**2).sum()
+slope_val = (n * xy_sum - x_sum * y_sum) / (n * x2_sum - x_sum * x_sum)
+intercept = (y_sum - slope_val * x_sum) / n
+r_value = (n * xy_sum - x_sum * y_sum) / np.sqrt((n * x2_sum - x_sum * x_sum) * (n * y2_sum - y_sum * y_sum))
+r_squared = r_value ** 2
+
+# Create ColumnDataSource with Month_Year for hover tool
+source = ColumnDataSource(df_pivot)
+
+# Create figure with initial axis labels
+plot = figure(
+    title="Crime Data Correlation Analysis", 
+    x_axis_label="Number of incidents for X-axis crime type (month,year)",
+    y_axis_label="Number of incidents for Y-axis crime type (month,year)",
+    tools="pan,wheel_zoom,box_zoom,reset",
+    width=750, 
+    height=550,
+    background_fill_color="#f5f5f5",
+    toolbar_location="above"
+)
+
+# Format plot appearance
+plot.title.text_font_size = '16pt'
+plot.xaxis.axis_label_text_font_size = "12pt"
+plot.yaxis.axis_label_text_font_size = "12pt"
+plot.grid.grid_line_alpha = 0.3
+
+# Add only the month-year hover tool
+hover = HoverTool(
+    tooltips=[
+        ("Time Period", "@Month_Year"),
+        (x_init, f"@{{{x_init}}}"),
+        (y_init, f"@{{{y_init}}}"),
+        ("Total Crimes", "@{Total Crimes}")
+    ],
+    mode='mouse'
+)
+plot.add_tools(hover)
+
+# Initial scatter plot
+scatter = plot.scatter(x=x_init, y=y_init, source=source, size=10,
+                      color="navy", alpha=0.7, line_color="white")
+
+# Dropdown widgets
+x_axis = Select(title="X-Axis Crime Type:", value=x_init,
+               options=sorted(numeric_cols), width=250)
+y_axis = Select(title="Y-Axis Crime Type:", value=y_init,
+               options=sorted(numeric_cols), width=250)
+
+# Regression line
+slope = Slope(gradient=slope_val, y_intercept=intercept, 
+             line_color='red', line_dash='dashed', line_width=2.5)
+plot.add_layout(slope)
+
+# R² label
+r_squared_label = Label(x=70, y=10, x_units='screen', y_units='screen',
+                       text=f"R² = {r_squared:.3f}", text_font_size='13px',
+                       text_color='red', background_fill_color='white',
+                       background_fill_alpha=0.8)
+plot.add_layout(r_squared_label)
+
+# JavaScript callback with axis label updates
+callback = CustomJS(args=dict(
+    source=source,
+    scatter=scatter,
+    slope=slope,
+    r_squared_label=r_squared_label,
+    plot=plot,
+    x_axis=x_axis,
+    y_axis=y_axis
+), code="""
+    const x = x_axis.value;
+    const y = y_axis.value;
+    const x_data = source.data[x];
+    const y_data = source.data[y];
+    
+    // Calculate statistics
+    let x_sum = 0, y_sum = 0, xy_sum = 0, x2_sum = 0, y2_sum = 0;
+    const n = x_data.length;
+    
+    for (let i = 0; i < n; i++) {
+        x_sum += x_data[i];
+        y_sum += y_data[i];
+        xy_sum += x_data[i] * y_data[i];
+        x2_sum += x_data[i] * x_data[i];
+        y2_sum += y_data[i] * y_data[i];
+    }
+    
+    // Calculate regression parameters
+    const slope_val = (n * xy_sum - x_sum * y_sum) / (n * x2_sum - x_sum * x_sum);
+    const intercept = (y_sum - slope_val * x_sum) / n;
+    const r_value = (n * xy_sum - x_sum * y_sum) / 
+                   Math.sqrt((n * x2_sum - x_sum * x_sum) * (n * y2_sum - y_sum * y_sum));
+    const r_squared = r_value * r_value;
+    
+    // Update plot elements
+    scatter.glyph.x = {field: x};
+    scatter.glyph.y = {field: y};
+    slope.gradient = slope_val;
+    slope.y_intercept = intercept;
+    r_squared_label.text = `R² = ${r_squared.toFixed(3)}`;
+    
+    // Update axis labels
+    plot.xaxis.axis_label = `${x} (Count)`;
+    plot.yaxis.axis_label = `${y} (Count)`;
+""")
+
+# Connect callbacks
+x_axis.js_on_change('value', callback)
+y_axis.js_on_change('value', callback)
+
+# Layout
+layout = column(
+    column(x_axis, y_axis, width=300),
+    plot
+)
+
+# Show the plot
+show(layout)
+```
+
+When going through the different options and comparing them. One notices that there is close to zero correlation between any of the crimes and vehicle theft. Where as the big reason behind it is the incidents of the years 2003-2005 which are completely different for vehicle theft. If you look at an example as robbery and assault they are way more correlated ($r^2$ value of 0.485) and generally if we compare most of the crimes with the total number of crimes, then they are fairly correlated. Examples being vandalism having $r^2=0.486$ and larcency/theft having $r^2=0.700$. Some of this might also be explained in larcency/theft and vandalism playing a bigger part of the crime incidents numbers
+
+One interesting thing one could look at is if not including the years 2003-2005 how much that would impact it. 

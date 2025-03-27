@@ -1,0 +1,22 @@
+project:
+  type: website
+
+website:
+  title: "Assignment 2 - Social Data Analysis and Visualization"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      #- hw2.qmd
+      #- hello.qmd
+
+format:
+  html:
+    theme:
+      - Journal
+      - brand
+    css: styles.css
+    toc: true
+
+
+
