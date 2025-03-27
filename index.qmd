@@ -1,5 +1,6 @@
 ---
 title: Looking at Vehicle thefts from 2003-2024 in 
+bibliography: references.bib
 from: markdown+emoji
 format:
   html:
