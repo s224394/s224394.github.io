@@ -112,7 +112,7 @@ display(base_map)
 
 From the heatmap its clear that a lot of the incidents happen in the north-eastern/eastern part of san francisco. And that trend does not change as teh years go by. But its clear that there is fewer crimes compared to 2003-2005 and the years after since the point of the heat map are more spread out. 
 
-The news article https://www.eastbaytimes.com/2007/02/16/car-thefts-decrease-statewide/ also tells this story
+The news article "Car Thefts Decrease Statewide"[@carTheftsDecrease2007] also tells this story
 Where the general trend for vehicle theft are on the decline. The reason behind this trend is both the fact that more and more vehicle have implemented alarms, key-coding systems. But also there has also been set up 16 auto-theft task forces. There have also been an increase in the use of so called "bait-cars" which are used as bait to track down the drivers and since its normal that they steal more than one car the number of cars that are being stolen drops significantly. In 2006 they made 357 arrest with the use of bait-cars. Which might have severely impacted the amount of cars stolen.
 
 After 2006 the number of incidents are generally low compared to 
