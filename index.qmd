@@ -16,6 +16,8 @@ We have chosen to look at the trends of vehicle thefts since the trend are "uniq
 The first relevant plot is the number of incidents of vehicle theft per year. We ignore 2025 since the we do not have data for that entire year.
 
 ```{python}
+#| label: fig-year-plot
+#| fig-cap: The plot shows the number of reported incidents of "Vehicle Theft" by the SFPD for every year 2003-2024. There is a 60% percent drop from 2005 to 2006 which might suggest that somethinge was actively done in order to reduce the number of vehicle thefts.
 import pandas as pd 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -46,6 +48,8 @@ The figure and the news article from before suggests that we might be able to se
 In order to look into this we plot the spatial data for vehicle thefts as a heatmap. We look at the incidents for a given month starting january 2003 and going forward.
 
 ```{python}
+#| label: fig-temporal-plot
+#| fig-cap: The plots shows a time series heatmap of the affected san francisco area. Where the heat suggest there being reported an incident. The time series goes through every month since 2003 up until december 2024. The heatmap suggest that the incidents mainly happens in the eastwestern/eastern part of san francisco. The heat maps also suggests that there has been an decrease in number of incidents over the years. 
 import folium
 from folium.plugins import HeatMapWithTime
 from IPython.display import display
@@ -112,6 +116,7 @@ HeatMapWithTime(
     display_index=True,
     use_local_extrema=1, 
     name="Vehicle Thefts",
+    #position="bottomright",
     blur=1
 ).add_to(base_map)
 
@@ -129,8 +134,10 @@ In order to determine how unique the trend of vehicle theft are it makes sense t
 We choose to look at the the number of incidents per month for a given crime. Afterwards we see how correlated the data for two crimes are. The correlation coefficient for the given plot are also calculated as to give a statistical measure of how correlated the data are. In the plot its possible to choose which crime categories to compare. If you hover over one of the points you get the month of the data and also the number of incidents. 
 
 ```{python}
+#| label: fig-correlation-plot
+#| fig-cap: This plot number of  incidents for two choosen crimes for a given month and year as a scatterplot. The correlation is calculated and there has been calculated a linear fit. The correlation coefficient between vehicle theft and any other crimes close to zero in most cases. This is not always the case when comparing other types of crimes.
 from bokeh.io import output_notebook, show
-from bokeh.layouts import column
+from bokeh.layouts import column, row
 from bokeh.models import Select, Slope, Label, CustomJS, HoverTool
 from bokeh.plotting import figure, ColumnDataSource
 
@@ -283,10 +290,10 @@ callback = CustomJS(args=dict(
 # Connect callbacks
 x_axis.js_on_change('value', callback)
 y_axis.js_on_change('value', callback)
-
+    
 # Layout
 layout = column(
-    column(x_axis, y_axis, width=300),
+    row(x_axis, y_axis, spacing=20),
     plot
 )
 
