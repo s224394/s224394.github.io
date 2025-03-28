@@ -7,12 +7,13 @@ format:
     code-fold: true
 jupyter: python3
 ---
-## The data
-Since the year 2003 the police department of san francisco has been reporting crime data. Of particular intererest for analysis is the different crime types, the time of incident (both date but also time of day down to the minute) but also the coordinates of the incident (given in latitude/longitude). From this data its possible to look at temporal and spatial trends of different crimes over the last 20+ years. The different categoris of crimes include Vehicle theft, vandalism, robbery, prostiution and many more. 
-I have choosen to look at the trends of vehicle thefts since the trend in many ways are unique compared to the other types of crimes, but i will go more into detail later. 
+## San Francisco Police department crime data
+Since the year 2003 the police department of san francisco has been reporting crime data. All these data are avaible to the public and therefore relevant to do data analysis on. Of particular interest for data analysis is the different crime types, the time of incident (both date but also time of day down to the minute) but also the coordinates of the incident (given in latitude/longitude). From this data its possible to look at temporal and spatial trends of different crimes over the last 20+ years. The different categories of crimes include vehicle theft, vandalism, robbery, prostiution and many more. 
+
+We have chosen to look at the trends of vehicle thefts since the trend are "unique" compared to the other types of crimes. This will be shown in the following plots.  
 
 ## The temporal trend of vehicle thefts
-The first super relevant thing is to look at how the number of incidents of vehicle theft have evolved over time.
+The first relevant plot is the number of incidents of vehicle theft per year. We ignore 2025 since the we do not have data for that entire year.
 
 ```{python}
 import pandas as pd 
@@ -22,16 +23,21 @@ data=pd.read_csv("C:/NoterDTU/6_semester/Social_data/website_2/s224394.github.io
 crimes = data[['Category', 'Year']]
 crimes = crimes[(crimes['Category']=='VEHICLE THEFT') & (crimes['Year']!=2025)  ]
 crime_counts = crimes["Year"].value_counts().sort_index()
+plt.figure().set_figwidth(7.4)
 crime_counts.plot(kind="bar",color="indigo",edgecolor="black")
+ax=plt.gca()
+
+ax.set_facecolor("#f5f5f5")
 plt.ylabel("Number of incidents")
 plt.xlabel("Year")
 plt.title("Number of Vehicle thefts per year (2003-2024)")
 plt.show()
 ```
 
-One thing one notices almost immedialty is the sudden drop from 2005 to 2006 and onwards. In 2005 the numbers peak at around 17.500 vehicle thefts while the next years it drops by around 10.000 and remains in that range going forward. This approximately 60% of the crimes that just stopped happening in one year. That seems quite strange. Some sources suggest that the fact that cars are hard to break into and harder to dissamble might be :grinning:
+One thing that seems unique is the sudden drop from 2005 to 2006 and onwards. In 2005 the numbers peak at around 17.500 vehicle thefts while the next year it drops by around 10.000 and remains in that range going forward. This is approximately 60% of the crimes that just stopped happening in one year. One would suspect that the police force might have increased the resoruces for fighting vehicle theft. One explanation could also be that cars generally are harder to break into today. 
 
-We will later compare vehicle theft to some other crimes in order to see if this was the overall trend of crime data (spoilers its not)
+In the news article "Car Thefts Decrease Statewide" by east bay times [@carTheftsDecrease2007] also tells this story
+Where the general trend for vehicle theft are on the decline. The reason behind this trend is both the fact that more and more vehicle have implemented alarms, key-coding systems. But also there has also been set up 16 auto-theft task forces. There have also been an increase in the use of so called "bait-cars" which are used as bait to track down the drivers and since its normal that they steal more than one car the number of cars that are being stolen drops significantly. In 2006 they made 357 arrest with the use of bait-cars. Which might have severely impacted the amount of cars stolen.
 
 ## The spatial trends 
 
@@ -113,10 +119,9 @@ display(base_map)
 
 From the heatmap its clear that a lot of the incidents happen in the north-eastern/eastern part of san francisco. And that trend does not change as teh years go by. But its clear that there is fewer crimes compared to 2003-2005 and the years after since the point of the heat map are more spread out. :sunglasses: Hello is this thing working?
 
-The news article "Car Thefts Decrease Statewide" [@carTheftsDecrease2007] also tells this story
-Where the general trend for vehicle theft are on the decline. The reason behind this trend is both the fact that more and more vehicle have implemented alarms, key-coding systems. But also there has also been set up 16 auto-theft task forces. There have also been an increase in the use of so called "bait-cars" which are used as bait to track down the drivers and since its normal that they steal more than one car the number of cars that are being stolen drops significantly. In 2006 they made 357 arrest with the use of bait-cars. Which might have severely impacted the amount of cars stolen.
 
-After 2006 the number of incidents are generally low compared to 
+
+After 2006 the number of incidents are generally low compared to there is still two times an upward trend. After 2010 and after 2019. Might inital guess would be that they are both related to the econimic crisis that happende around there. The 2009 economic crahs and the begenning of the corona pandemic both made it so more people were poor and therefore needed to steal. 
 
 Last thing that could be interesting to look at is if the trends in data are unique to car theft or if the over all trend of crime is the "same" as with the car theft. 
 
@@ -210,7 +215,7 @@ plot.add_tools(hover)
 
 # Initial scatter plot
 scatter = plot.scatter(x=x_init, y=y_init, source=source, size=10,
-                      color="navy", alpha=0.7, line_color="white")
+                      color="indigo", alpha=0.7, line_color="white")
 
 # Dropdown widgets
 x_axis = Select(title="X-Axis Crime Type:", value=x_init,
